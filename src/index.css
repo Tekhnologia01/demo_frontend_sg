@@ -1,0 +1,55 @@
+@import "tailwindcss";
+
+/* Global CSS (e.g., index.css or your main CSS file) */
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  /* IE and Edge */
+  scrollbar-width: none;
+  /* Firefox */
+}
+
+.swiper-button-prev,
+.swiper-button-next {
+  background-color: #6D31ED;
+  color: #fff !important;
+  font-size: 10px !important;
+  border-radius: 10px;
+  padding: 16px;
+}
+
+:root {
+  --swiper-navigation-size: 16px !important;
+}
+
+/* Firefox */
+.minimal-scrollbar {
+  scrollbar-width: thin;              /* makes scrollbar thinner */
+  scrollbar-color: #bbb transparent;  /* thumb + track color */
+  overflow: auto;
+}
+
+/* Chrome, Edge, Safari */
+.minimal-scrollbar::-webkit-scrollbar {
+  width: 4px;              /* super thin vertical scrollbar */
+  height: 4px;             /* super thin horizontal scrollbar */
+}
+
+.minimal-scrollbar::-webkit-scrollbar-track {
+  background: transparent; /* no visible track */
+}
+
+.minimal-scrollbar::-webkit-scrollbar-thumb {
+  background-color: #bbb;  /* thumb color */
+  border-radius: 10px;     /* rounded ends */
+}
+
+/* Remove scrollbar buttons (up/down arrows) */
+.minimal-scrollbar::-webkit-scrollbar-button {
+  display: none;
+  height: 0;
+  width: 0;
+}
