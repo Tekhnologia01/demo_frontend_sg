@@ -68,24 +68,24 @@ const SelfieCapture = forwardRef(({ onCapture, onClose }, ref) => {
 
       {/* Floating Controls */}
       <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex items-center gap-6 bg-black/40 px-6 py-3 rounded-full backdrop-blur-sm">
-  {/* Capture Button */}
-  <button
-    onClick={capturePhoto}
-    className="w-12 h-12 bg-white rounded-full border-[4px] border-gray-800 flex items-center justify-center hover:scale-110 transition-transform"
-    title="Capture"
-  >
-    <MdCameraAlt className="text-xl text-gray-800" />
-  </button>
+        {/* Capture Button */}
+        <button
+          onClick={capturePhoto}
+          className="w-12 h-12 bg-white rounded-full border-[4px] border-gray-800 flex items-center justify-center hover:scale-110 transition-transform"
+          title="Capture"
+        >
+          <MdCameraAlt className="text-xl text-gray-800" />
+        </button>
 
-  {/* Cancel Button */}
-  <button
-    onClick={onClose}
-    className="w-12 h-12 bg-red-600 text-white rounded-full flex items-center justify-center text-xl font-bold hover:bg-red-700 transition"
-    title="Cancel"
-  >
-    ✕
-  </button>
-</div>
+        {/* Cancel Button */}
+        <button
+          onClick={onClose}
+          className="w-12 h-12 bg-red-600 text-white rounded-full flex items-center justify-center text-xl font-bold hover:bg-red-700 transition"
+          title="Cancel"
+        >
+          ✕
+        </button>
+      </div>
 
     </div>
   );
@@ -166,15 +166,15 @@ const VerifyIdentityModal = ({ isOpen }) => {
           },
         }
       );
-    } catch (error) {}
+    } catch (error) { }
   };
 
   return !isOpen ? null : (
     <div
       className="fixed inset-0 z-100 flex items-center justify-center backdrop-blur-xs"
-      // onClick={(e) => {
-      //   if (e.target === e.currentTarget) handleModalClose();
-      // }}
+    // onClick={(e) => {
+    //   if (e.target === e.currentTarget) handleModalClose();
+    // }}
     >
       <div
         className="bg-white/60 sm:max-w-fit backdrop-blur-lg p-6 rounded-xl shadow-lg relative"
@@ -222,11 +222,10 @@ const VerifyIdentityModal = ({ isOpen }) => {
               <button
                 onClick={() => !isVerifying && setShowCamera(true)}
                 disabled={isVerifying}
-                className={`font-semibold text-white w-full rounded-full flex gap-1 justify-center items-center outline-none border-none p-2 cursor-pointer ${
-                  isVerifying
-                    ? "bg-gray-400 cursor-not-allowed"
-                    : "bg-gradient-to-r from-[#3E1C87] to-[#6D31ED] hover:opacity-90"
-                }`}
+                className={`font-semibold text-white w-full rounded-full flex gap-1 justify-center items-center outline-none border-none p-2 cursor-pointer ${isVerifying
+                  ? "bg-gray-400 cursor-not-allowed"
+                  : "bg-gradient-to-r from-[#3E1C87] to-[#6D31ED] hover:opacity-90"
+                  }`}
               >
                 {isVerifying ? "Verifying..." : "Click"}
                 {!isVerifying && <PiHandTap className="text-xl" />}

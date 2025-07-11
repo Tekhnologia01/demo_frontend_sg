@@ -1,7 +1,7 @@
 import { RxCross1 } from "react-icons/rx";
 
 const LogoutModal = ({ isOpen, onClose, callbackFn }) => {
-    if (!isOpen) return null;
+    // if (!isOpen) return null;
 
     const handleBackdropClick = (e) => {
         if (e.target === e.currentTarget) {
@@ -11,13 +11,13 @@ const LogoutModal = ({ isOpen, onClose, callbackFn }) => {
 
     return (
         <div
-            className="fixed inset-0 z-100 flex items-center justify-center backdrop-blur-xs p-4"
+            className={`fixed inset-0 z-100 flex items-center justify-center bg-black/40 p-4 transition-opacity duration-200 ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
             onClick={handleBackdropClick}
             role="dialog"
             aria-modal="true"
         >
             <div
-                className="bg-white max-w-[550px] p-6 rounded-lg shadow-lg relative"
+                className={`bg-white max-w-[550px] p-6 rounded-lg shadow-lg relative transform transition-all duration-300 ease-in-out ${isOpen ? 'scale-100 opacity-100' : 'scale-50 opacity-0'}`}
                 onClick={(e) => e.stopPropagation()}
             >
                 <button

@@ -95,7 +95,7 @@ const UploadBoard = () => {
         <>
             {!showUploadBoard && (
                 <button
-                    className={`fixed bottom-5 right-5 ${buttonColor} text-white px-4 py-2 rounded-full shadow-lg transition z-50 cursor-pointer`}
+                    className={`fixed bottom-5 right-5 ${buttonColor} text-white px-4 py-2 rounded-full shadow-lg transition z-40 cursor-pointer`}
                     onClick={() => dispatch(toggleUploadBoard(true))}
                 >
                     {statusText} ({totalCompleted}/{totalUploads})
@@ -104,7 +104,7 @@ const UploadBoard = () => {
 
             <div
                 ref={boardRef}
-                className={`fixed bottom-4 right-4 w-[350px] max-h-[60vh] bg-white rounded-xl shadow-lg flex flex-col overflow-hidden transition-transform duration-300 z-50 ${showUploadBoard ? "translate-x-0" : "translate-x-[400px]"}`}
+                className={`fixed bottom-4 right-4 w-[350px] max-h-[60vh] bg-white rounded-xl shadow-lg flex flex-col overflow-hidden transition-transform duration-300 z-40 ${showUploadBoard ? "translate-x-0" : "translate-x-[400px]"}`}
             >
                 <div className="w-full p-3 bg-[#F5F1FE] flex justify-between items-center rounded-t-xl">
                     <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 px-2">

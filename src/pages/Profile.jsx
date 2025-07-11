@@ -7,7 +7,7 @@ import { MdCameraAlt } from "react-icons/md";
 import toast from "react-hot-toast";
 import * as Yup from "yup";
 import defaultProfile from "../assets/defaultProfile.jpg";
-import Spinner from "../components/common/Spinner";
+// import Spinner from "../components/common/Spinner";
 import ProfileBg from "../assets/profile-bg.svg";
 import { IoArrowBackOutline } from "react-icons/io5";
 import { useNavigate } from "react-router-dom";

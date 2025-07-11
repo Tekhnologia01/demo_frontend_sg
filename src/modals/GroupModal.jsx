@@ -3,7 +3,7 @@ import { IoCamera } from "react-icons/io5";
 import { FaCheck } from "react-icons/fa6";
 import { AiOutlineCloudUpload } from "react-icons/ai";
 import { Formik, Form } from "formik";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Searchbar from "../components/Common/Searchbar";
 import EmojiInput from "../components/common/EmojiInput";
 import axiosClient from "../services/axiosInstance";
@@ -13,7 +13,7 @@ import { createGroupSchema } from "../validationSchema/createGroupSchema";
 import { MdEdit } from "react-icons/md";
 
 const GroupModal = ({ isOpen, onClose, callBack, groupData, isEdit = false }) => {
-  if (!isOpen) return null;
+  // if (!isOpen) return null;
 
   const [fetchedUsers, setFetchedUsers] = useState([]);
   const [fetchingUsers, setFetchingUsers] = useState(false);
@@ -21,10 +21,15 @@ const GroupModal = ({ isOpen, onClose, callBack, groupData, isEdit = false }) =>
   const photoRef = useRef();
   const searchTermRef = useRef("");
 
-  const [photoPreview, setPhotoPreview] = useState(
-    isEdit && groupData?.group_photo ? decrypt(groupData.group_photo) : null
-  );
+  const [photoPreview, setPhotoPreview] = useState(null);
+
   const [excelName, setExcelName] = useState("");
+
+  useEffect(() => {
+  if (isEdit && groupData?.group_photo) {
+    setPhotoPreview(decrypt(groupData.group_photo));
+  }
+}, [isEdit, groupData]);
 
   const handleBackdropClick = (e) => {
     if (e.target === e.currentTarget) {
@@ -69,12 +74,13 @@ const GroupModal = ({ isOpen, onClose, callBack, groupData, isEdit = false }) =>
 
   return (
     <div
-      className="fixed inset-0 z-100 flex items-center justify-center backdrop-blur-xs p-4"
+      className={`fixed inset-0 z-100 flex items-center justify-center bg-black/40 p-4 transition-opacity duration-200 ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
       onClick={handleBackdropClick}
     >
       <Formik
+        enableReinitialize
         initialValues={{
-          groupName: isEdit && groupData?.group_name ? decrypt(groupData?.group_name) : "",
+          groupName: isEdit && groupData?.group_name != "" ? decrypt(groupData?.group_name) : "",
           groupMembers: isEdit && groupData?.group_members ? groupData.group_members : [],
           excelFile: null,
           groupPhoto: null,
@@ -87,6 +93,7 @@ const GroupModal = ({ isOpen, onClose, callBack, groupData, isEdit = false }) =>
         }}
       >
         {({ values, setFieldValue, isSubmitting, errors, touched, submitCount }) => {
+          // setPhotoPreview(isEdit && groupData?.group_photo ? decrypt(groupData.group_photo) : null)
           const handlePhotoChange = (e) => {
             const file = e.currentTarget.files[0];
             if (file) {
@@ -127,7 +134,7 @@ const GroupModal = ({ isOpen, onClose, callBack, groupData, isEdit = false }) =>
 
           return (
             <Form
-              className="bg-white w-full max-w-[550px] rounded-xl shadow-lg"
+              className={`bg-white w-full max-w-[550px] rounded-xl shadow-lg transform transition-all duration-300 ease-in-out ${isOpen ? 'scale-100 opacity-100' : 'scale-50 opacity-0'}`}
               onClick={(e) => e.stopPropagation()}
             >
               {/* Header */}
@@ -149,11 +156,13 @@ const GroupModal = ({ isOpen, onClose, callBack, groupData, isEdit = false }) =>
                 <div className="flex flex-col items-center cursor-pointer relative">
                   {photoPreview ? (
                     <>
-                      <img
+                      <div className="w-18 h-18">
+                        <img
                         src={photoPreview}
                         alt="Profile Preview"
-                        className="w-18 rounded-full object-cover border border-gray-400"
+                        className="w-full h-full rounded-full object-cover border border-gray-400"
                       />
+                      </div>
                       <button
                         type="button"
                         onClick={isEdit ? () => photoRef.current.click() : clearPhoto}

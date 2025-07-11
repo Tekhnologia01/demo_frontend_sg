@@ -32,7 +32,7 @@ const AppRoutes = ({ isAuthenticated }) => {
                     <Route path="/dashboard" element={<Dashboard />} />
                     <Route path="/folders" element={<FolderPage />} />
                     <Route path="/groups" element={<GroupPage />} />
-                    <Route path="/folders/media" element={<FolderMedia />} />
+                    {/* <Route path="/folders/media" element={<FolderMedia />} /> */}
                     <Route path="/approve-media" element={<MediaApproval />} />
                     <Route path="/profile" element={<Profile />} />
                     <Route path="/change-password" element={<ChangePassword />} />

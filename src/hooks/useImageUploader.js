@@ -12,8 +12,8 @@ import {
 } from "../features/uploads/uploadSlice";
 import { selectUploads, selectIsUploading, selectHasPausedUploads, selectIsCompleted, selectTotalCompleted, selectTotalUploads } from "../features/uploads/uploadSelectors";
 import axiosClient from "../services/axiosInstance";
-import { useEffect } from "react";
 import toast from "react-hot-toast";
+import store from "../store/store";
 
 const uploadControllers = {};
 
@@ -25,16 +25,6 @@ export const useImageUploader = (folderId) => {
     const isCompleted = useSelector((state) => selectIsCompleted(state, folderId));
     const totalUploads = useSelector((state) => selectTotalUploads(state, folderId));
     const totalCompleted = useSelector((state) => selectTotalCompleted(state, folderId));
-
-    useEffect(() => {
-        let timeout;
-        if (!isUploading && isCompleted) {
-            timeout = setTimeout(() => {
-                toast.success(`Upload completed for folder ${folderId}`);
-            }, 500);
-        }
-        return () => clearTimeout(timeout);
-    }, [isUploading, isCompleted, folderId]);
 
     const enqueueImages = (files, folderId) => {
         files.forEach((file) => {
@@ -111,6 +101,15 @@ export const useImageUploader = (folderId) => {
             delete uploadControllers[id];
 
             dispatch(updateUpload({ folderId, id, updates: { status: "success", progress: 100 } }));
+
+            const latestUploads = selectUploads(store.getState(), folderId);
+            const allCompleted = latestUploads.length > 0 && latestUploads.every(u => u.status === "success");
+
+            if (allCompleted) {
+                setTimeout(() => {
+                    toast.success(`Upload completed for folder ${folderId}`);
+                }, 500);
+            }
 
         } catch (error) {
             if (error.name === "CanceledError" || axios.isCancel?.(error)) {

@@ -11,7 +11,7 @@ import { RxCrossCircled } from "react-icons/rx";
 
 const UploadMedia = ({ isOpen, onClose }) => {
 
-    if (!isOpen) return null;
+    // if (!isOpen) return null;
 
     const fileInputRef = useRef();
     const { currentFolderId } = useSelector((state) => state.folder);
@@ -64,13 +64,13 @@ const UploadMedia = ({ isOpen, onClose }) => {
 
     return (
         <div
-            className="fixed inset-0 z-100 flex items-center justify-center backdrop-blur-xs p-4"
+            className={`fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 transition-opacity duration-200 ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
             onClick={handleBackdropClick}
             role="dialog"
             aria-modal="true"
         >
             <div
-                className="bg-white w-full max-w-[700px] rounded-xl shadow-lg flex flex-col max-h-[100vh] overflow-hidden"
+                className={`bg-white w-full max-w-[700px] rounded-xl shadow-lg flex flex-col max-h-[100vh] overflow-hidden transform transition-all duration-300 ease-in-out ${isOpen ? 'scale-100 opacity-100' : 'scale-50 opacity-0'}`}
                 onClick={(e) => e.stopPropagation()}
             >
                 <div className="w-full p-4 bg-[#F5F1FE] flex justify-between items-center rounded-t-xl">

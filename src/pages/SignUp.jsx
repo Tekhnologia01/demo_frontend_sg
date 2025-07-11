@@ -97,7 +97,7 @@ const SignUp = () => {
           >
             {({ values, setFieldValue, errors, touched, isSubmitting }) => (
               <Form className="flex flex-col items-center gap-4">
-                <h2 className="font-bold text-3xl text-[#4F57E9]">Sign Up</h2>
+                <h2 className="font-bold text-3xl text-[#6D31ED]">Sign Up</h2>
                 <div className="w-full flex sm:flex-row flex-col gap-4">
                   <div className="w-full">
                     <label htmlFor="firstName" className="text-gray-700">

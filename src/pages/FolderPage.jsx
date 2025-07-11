@@ -1,9 +1,8 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import Searchbar from "../components/Common/Searchbar";
 import FolderCard from "../components/FolderCard";
-import { HiOutlineDotsVertical, HiOutlineHome } from "react-icons/hi";
-import { FiChevronRight } from "react-icons/fi";
+import { HiOutlineDotsVertical } from "react-icons/hi";
 import { FaAngleDown, FaPlus } from "react-icons/fa6";
 import CreateFolder from "../modals/CreateFolder";
 import toast from "react-hot-toast";
@@ -11,23 +10,19 @@ import axiosClient from "../services/axiosInstance";
 import Spinner from "../components/common/Spinner";
 import Pagination from "../components/common/Pagination";
 import { decrypt } from "../services/decrypt";
-import {
-  goToBreadcrumb,
-  goToFolder,
-  resetToRoot,
-  updateBreadCrumb,
-} from "../features/folders/folderSlice";
+import { goToBreadcrumb, goToFolder, resetToRoot, updateBreadCrumb } from "../features/folders/folderSlice";
 import { useFolder } from "../hooks/useFolder";
 import { useMedia } from "../hooks/useMedia";
 import MasonryLayout from "../components/Common/MasonryLayout";
 import { useQueryClient } from "@tanstack/react-query";
 import EditPermission from "../modals/EditPermission";
-import { useNavigate } from "react-router-dom";
 import ConfirmationModal from "../modals/ConfirmationModal";
 import { RiDeleteBin6Line } from "react-icons/ri";
 import UploadMedia from "../modals/UploadMedia";
 import { memo } from "react";
 import MediaApproval from "../components/MediaApproval";
+import { motion, AnimatePresence } from 'framer-motion';
+import Breadcrumb from "../components/BreadCrumb";
 
 const limitPerPage = 150;
 
@@ -41,6 +36,8 @@ const FolderPage = () => {
   const [mediaPage, setMediaPage] = useState(1);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  const [deleteType, setDeleteType] = useState("");
+
   const [showAddDropdown, setShowAddDropdown] = useState(false);
   const [showSettingsDropdown, setShowSettingsDropdown] = useState(false);
   const [showMediaDropdown, setShowMediaDropdown] = useState(false);
@@ -53,6 +50,8 @@ const FolderPage = () => {
   const [contextFolder, setContextFolder] = useState(null);
 
   const [isRequestVisible, setIsRequestVisible] = useState(false);
+
+  const [selectedImages, setSelectedImages] = useState([]);
 
   const addDropdownRef = useRef();
   const settingsDropdownRef = useRef();
@@ -76,28 +75,62 @@ const FolderPage = () => {
         };
       }, [onClose]);
 
+      const menuVariants = {
+        hidden: {
+          opacity: 0,
+          y: -10,
+          scale: 0.95,
+        },
+        visible: {
+          opacity: 1,
+          y: 0,
+          scale: 1,
+          transition: {
+            duration: 0.2,
+            ease: [0.4, 0, 0.2, 1],
+          },
+        },
+        exit: {
+          opacity: 0,
+          y: -10,
+          scale: 0.95,
+          transition: {
+            duration: 0.15,
+          },
+        },
+      };
+
       return (
-        <div
-          className="absolute z-50 w-40 bg-white rounded shadow border border-gray-200"
-          style={{ top: y, left: x }}
-        >
-          <div className="px-4 py-2 hover:bg-gray-100 cursor-pointer">Open</div>
-          <div className="px-4 py-2 hover:bg-gray-100 cursor-pointer">
-            Rename
-          </div>
-          <div
-            className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
-            onClick={() => setIsDeleteModalOpen(true)}
+        <AnimatePresence>
+          <motion.div
+            className="absolute z-50 w-48 bg-white rounded-lg shadow-sm border border-gray-100"
+            style={{ top: y, left: x }}
+            variants={menuVariants}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
           >
-            Delete
-          </div>
-        </div>
+            <div className="px-3 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 cursor-pointer transition-colors duration-150 rounded-t-lg">
+              Open
+            </div>
+            <div className="px-3 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 cursor-pointer transition-colors duration-150">
+              Rename
+            </div>
+            <div
+              className="px-3 py-2 text-sm text-red-600 hover:bg-red-50 hover:text-red-700 cursor-pointer transition-colors duration-150 rounded-b-lg"
+              onClick={() => {
+                setDeleteType("folder");
+                setIsDeleteModalOpen(true);
+              }}
+            >
+              Delete
+            </div>
+          </motion.div>
+        </AnimatePresence>
       );
     },
     [dispatch]
   );
-
-  const navigate = useNavigate();
 
   const [contextMenu, setContextMenu] = useState({
     visible: false,
@@ -149,10 +182,12 @@ const FolderPage = () => {
 
   const handleBreadcrumbClick = (index) => {
     dispatch(goToBreadcrumb(index));
+    setIsRequestVisible(false);
   };
 
-  const handleResetToRoot = () => {
+  const handleRootClick = () => {
     dispatch(resetToRoot());
+    setIsRequestVisible(false);
   };
 
   const handleFolderDelete = async () => {
@@ -234,10 +269,65 @@ const FolderPage = () => {
     );
   };
 
+  const handleToggleSelection = useCallback((id) => {
+    setSelectedImages((prev) => {
+      if (prev.includes(id)) {
+        return prev.filter((imgId) => imgId !== id);
+      } else {
+        return [...prev, id];
+      }
+    });
+  }, []);
+
+  const handleDeleteMedia = async () => {
+    try {
+      const payload = {
+        mediaIds: selectedImages,
+        status: "DELETED",
+      };
+      await toast.promise(axiosClient.patch(`/media/status`, payload), {
+        loading: "Updating media status...",
+        success: (res) => {
+          setIsSelect(false);
+          mediaRefetch();
+          setSelectedImages([]);
+          return res?.data?.message || "Media status updated successfully";
+        },
+        error: (err) => {
+          return (
+            err?.response?.data?.message || "Failed to update media status"
+          );
+        },
+      });
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+  };
+
   const folders = foldersData?.data || [];
   const totalFolders = foldersData?.totalRecords || 0;
   const media = mediaData?.data || [];
-  // const totalMedia = mediaData?.totalRecords || 0;
+
+  const isAllSelected = useMemo(
+    () => media.every((item) => selectedImages.includes(item.media_id)),
+    [media, selectedImages]
+  );
+
+  const handleSelectAllToggle = useCallback(() => {
+    // Work here
+  })
+
+  const initialMedia = useMemo(
+    () =>
+      media?.map((item) => ({
+        media_thumb_url: decrypt(item.media_thumb_url),
+        alt: item?.alt || "Media image",
+        id: item?.media_id,
+        title: item?.title,
+      })) || [],
+    [media]
+  );
 
   return (
     <>
@@ -254,36 +344,7 @@ const FolderPage = () => {
 
           {/* Breadcrumbs and Action Buttons */}
           <div className="flex items-center justify-between px-4 flex-wrap">
-            <div className="px-4 py-2 flex flex-wrap items-center gap-1 text-gray-600">
-              <button
-                onClick={()=>{
-                  handleResetToRoot();
-                  setIsRequestVisible(false);
-                }}
-                className={`font-medium flex items-center gap-1 hover:text-[#6D31ED] transition cursor-pointer ${
-                  !breadcrumbs.length && "text-black"
-                }`}
-              >
-                <HiOutlineHome size={18} className="mb-[3px]" />
-                Home
-              </button>
-
-              {breadcrumbs.map((crumb, idx) => (
-                <div key={crumb.folder_id} className="flex items-center gap-1">
-                  <FiChevronRight className="text-gray-400" />
-                  <button
-                    onClick={() => {
-                      handleBreadcrumbClick(idx); setIsRequestVisible(false)
-                    }}
-                    className={`font-medium hover:text-[#6D31ED] transition cursor-pointer ${
-                      idx === breadcrumbs.length - 1 && "text-black"
-                    }`}
-                  >
-                    {decrypt(crumb.folder_name)}
-                  </button>
-                </div>
-              ))}
-            </div>
+            <Breadcrumb breadcrumbs={breadcrumbs} handleRootClick={handleRootClick} handleBreadcrumbClick={handleBreadcrumbClick} />
 
             {/* Action Buttons */}
             <div className="flex items-center gap-4">
@@ -311,7 +372,6 @@ const FolderPage = () => {
                         className="p-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer"
                         onClick={() => {
                           setShowAddDropdown(false);
-                          // navigate('/upload');
                           setIsUploadModalOpen(true);
                         }}
                       >
@@ -344,21 +404,19 @@ const FolderPage = () => {
                         Edit Folder
                       </div>
                       {/* <div
-                      className="p-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer"
-                    >
-                      Delete Folder
-                    </div> */}
-                      {
-                        <div
-                          className="p-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer"
-                          onClick={() => {
-                            setShowSettingsDropdown(false);
-                            openEditModal();
-                          }}
-                        >
-                          Permissions
-                        </div>
-                      }
+                        className="p-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer"
+                      >
+                        Delete Folder
+                      </div> */}
+                      <div
+                        className="p-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer"
+                        onClick={() => {
+                          setShowSettingsDropdown(false);
+                          openEditModal();
+                        }}
+                      >
+                        Permissions
+                      </div>
 
                       <div
                         className="p-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer"
@@ -380,11 +438,6 @@ const FolderPage = () => {
             <>
               {/* ===== Folder Section ===== */}
               <section className="px-4">
-                {!!breadcrumbs.length && (
-                  <h2 className="text-lg text-gray-700 font-semibold mb-2">
-                    Folders
-                  </h2>
-                )}
                 <div className="flex items-center flex-wrap justify-center gap-4">
                   {isFoldersLoading || isFoldersFetching ? (
                     <Spinner size={36} />
@@ -415,35 +468,67 @@ const FolderPage = () => {
               </section>
 
               {/* ===== Media Section ===== */}
-              {!!breadcrumbs.length && !!media.length && (
+              {!!breadcrumbs.length && !!media.length && !!currentFolderId && (
                 <section className="px-4">
-                  <div className="w-full flex justify-between items-center">
-                    <h2 className="text-lg text-gray-700 font-semibold mb-2">
-                      Media
-                    </h2>
-                    <div
-                      className="relative cursor-pointer"
-                      ref={mediaDropdownRef}
-                    >
-                      <HiOutlineDotsVertical
-                        size={22}
-                        onClick={() => setShowMediaDropdown(true)}
-                      />
-                      {showMediaDropdown && (
-                        <div className="absolute w-[140px] right-0 p-2 bg-white rounded-lg shadow-lg border border-gray-200 z-51 overflow-hidden">
-                          <div
-                            className="p-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer"
+                  <div className={`w-full flex justify-${isSelect ? 'between' : 'end'} items-center mb-3`}>
+                    {
+                      isSelect &&
+                      <div className="flex items-center">
+                        <label className="flex items-center gap-2 font-medium cursor-pointer ps-2">
+                          <input
+                            type="checkbox"
+                            checked={isAllSelected}
+                            onChange={handleSelectAllToggle}
+                            className="w-4 h-4 cursor-pointer"
+                          />
+                          Select All
+                        </label>
+                      </div>
+                    }
+                    <div className="flex items-center gap-2">
+                      {
+                        isSelect && <div className="flex justify-center gap-2">
+                          <button
+                            className="flex justify-center items-center gap-1 w-fit p-1 px-4 outline-0 rounded-full text-white bg-red-500 hover:bg-red-600 shadow-sm hover:shadow-md transition disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                             onClick={() => {
-                              setIsSelect(true);
-                              setShowMediaDropdown(false);
+                              setDeleteType("media");
+                              setIsDeleteModalOpen(true);
                             }}
+                            disabled={!selectedImages.length}
                           >
-                            Delete Images
-                          </div>
+                            Delete
+                          </button>
+                          <button
+                            className="flex justify-center items-center gap-1 w-fit cursor-pointer p-1 px-4 outline-0 rounded-full text-white bg-gray-500 hover:bg-gray-600 shadow-sm hover:shadow-md transition"
+                            onClick={() => setIsSelect(false)}
+                          >
+                            Cancel
+                          </button>
                         </div>
-                      )}
+                      }
+                      <div
+                        className="relative cursor-pointer rounded-full hover:bg-gray-200 transition p-2"
+                        ref={mediaDropdownRef}
+                        onClick={() => setShowMediaDropdown(!showMediaDropdown)}
+                      >
+                        <HiOutlineDotsVertical size={22} />
+                        {showMediaDropdown && (
+                          <div className="absolute w-[140px] right-0 top-10 p-2 bg-white rounded-lg shadow-lg border border-gray-200 z-51 overflow-hidden">
+                            <div
+                              className="p-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer"
+                              onClick={() => {
+                                setIsSelect(true);
+                                setShowMediaDropdown(false);
+                              }}
+                            >
+                              Select Images
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
+
                   <div className="flex justify-around items-center gap-4">
                     {isMediaLoading || isMediaFetching ? (
                       <Spinner size={36} />
@@ -451,10 +536,12 @@ const FolderPage = () => {
                       <p className="text-red-500">Failed to load media</p>
                     ) : media.length > 0 ? (
                       <MasonryLayout
-                        initialPhotos={media?.map((item) =>
-                          decrypt(item?.media_thumb_url)
-                        )}
+                        initialMedia={initialMedia}
+                        urlKey="media_thumb_url"
                         selectable={isSelect}
+                        selectedMedia={selectedImages}
+                        onSelectionChange={handleToggleSelection}
+                        mediaRefetch={mediaRefetch}
                       />
                     ) : (
                       <p>No media available</p>
@@ -464,7 +551,7 @@ const FolderPage = () => {
               )}
             </>
           ) : (
-            <MediaApproval onBack={() => setIsRequestVisible(false)}/>
+            <MediaApproval onBack={() => setIsRequestVisible(false)} />
           )}
         </div>
       </div>
@@ -488,8 +575,8 @@ const FolderPage = () => {
         folderData={
           isEdit
             ? breadcrumbs?.find(
-                (data) => data?.folder_id === currentFolderId
-              ) || {}
+              (data) => data?.folder_id === currentFolderId
+            ) || {}
             : {}
         }
       />
@@ -502,8 +589,14 @@ const FolderPage = () => {
       <ConfirmationModal
         isOpen={isDeleteModalOpen}
         onClose={() => setIsDeleteModalOpen(false)}
-        callbackFn={handleFolderDelete}
-        message={"Are you sure to delete this folder?"}
+        callbackFn={
+          deleteType === "folder" ? handleFolderDelete : handleDeleteMedia
+        }
+        message={
+          deleteType === "folder"
+            ? "Are you sure to delete this folder?"
+            : "Are you sure to delete this media?"
+        }
         icon={<RiDeleteBin6Line size={46} color="gray" />}
       />
 

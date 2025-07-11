@@ -19,7 +19,7 @@ const EditPermission = ({ isOpen, onClose }) => {
   const [searchTerm, setSearchTerm] = useState("");
 
   const { currentFolderId } = useSelector((state) => state.folder);
-  const { data: foldersData , refetch} = useFolderUser(currentFolderId ?? "");
+  const { data: foldersData, refetch } = useFolderUser(currentFolderId ?? "");
 
   const toggleDropdown = (userId) => {
     setOpenDropdownId((prevId) => (prevId === userId ? null : userId));
@@ -71,14 +71,14 @@ const EditPermission = ({ isOpen, onClose }) => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  if (!isOpen) return null;
+  // if (!isOpen) return null;
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-xs p-4"
+      className={`fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 transition-opacity duration-200 ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
       onClick={handleBackdropClick}
     >
-      <div className="bg-white w-full max-w-[550px] rounded-xl shadow-lg flex flex-col">
+      <div className={`bg-white w-full max-w-[550px] rounded-xl shadow-lg flex flex-col transform transition-all duration-300 ease-in-out ${isOpen ? 'scale-100 opacity-100' : 'scale-50 opacity-0'}`}>
         <div className="w-full p-4 bg-[#F5F1FE] flex justify-between items-center rounded-t-xl">
           <h2 className="text-[#6D31ED] text-2xl font-bold px-2">
             Edit Permission
@@ -181,13 +181,13 @@ const EditPermission = ({ isOpen, onClose }) => {
                     </Form>
                   </Formik>
                 );
-              }):
+              }) :
               <p className="text-center text-gray-600">No user added</p>
-              }
+            }
           </div>
         </div>
-      </div>
-    </div>
+      </div >
+    </div >
   );
 };
 
